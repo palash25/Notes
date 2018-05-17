@@ -103,7 +103,7 @@ created with optimizations to make the rust code run faster.
   string. `::new` means `new` is a function associated with the type `String`
 - Example of using stdlib methods provided we have declared `io` in the scope of
   the program using `use std::io`:
-  ```
+  ```rust
   io::stdin().read_line(&mut v)
       .expect("Failed to read line");
   ```
@@ -119,7 +119,7 @@ created with optimizations to make the rust code run faster.
   `io::Result` has an `expect` method that displays the message provided if it
   has the variant `Err`.
 - *Placeholders:*
-  ```
+  ```rust
   let x = 5;
   let y = 10;
 
@@ -133,7 +133,7 @@ created with optimizations to make the rust code run faster.
   in the browser.
 
 ## Better Error Handling
-```
+```rust
 let guess: u32 = match guess.trim().parse() {
     Ok(num) => num,
     Err(_) => continue,
@@ -172,7 +172,7 @@ The underscore, `_`, is a catchall value; in this example, we’re saying we wan
 A new variable can be declared with the same name as that of a previous one. The
 new variable then shadows the previous one and the value displayed is that of
 most recent variable that shadowed its previous ones.
-```
+```rust
 fn main() {
     let x = 5;
 
@@ -191,13 +191,13 @@ The value of x is: 12
 By using let, we can perform a few transformations on a value but have the variable be immutable after those transformations have been completed.
 
 The other difference between mut and shadowing is that because we’re effectively creating a new variable when we use the let keyword again, we can change the type of the value but reuse the same name. For e.g:
-```
+```rust
 let spaces = "   ";
 let spaces = spaces.len();
 ```
 The second spaces is a new variable so can be assigned a different types
 but the same thing with `mut` raises errors
-```
+```rust
 let mut spaces = "   ";
 spaces = spaces.len();
 ```
@@ -218,7 +218,7 @@ the compiler might complain.
 ## Compounds
 
 1. Tuples (multiple types of elements):
-          ```
+          ```rust
           fn main() {
               // declares a tuple `tup`
               let tup: (i32, f64, u8) = (500, 6.4, 1);
@@ -234,7 +234,7 @@ the compiler might complain.
    This :point_up: can also be done without the type annotations
 
 2. Array (same types of element): The following gives an index out of bounds
-          ```
+          ```rust
           fn main() {
               let a = [1, 2, 3, 4, 5];
               let index = 10;
@@ -255,7 +255,7 @@ the compiler might complain.
   expression's value is implicitly returned as the return value for that
   function.
 
-  ```
+  ```rust
   fn main() {
       let x = plus_one(5);
 
@@ -272,7 +272,7 @@ something like `x = y = 5` wouldn't be possible in Rust since statements don't
 have return values.
 
 ## Expressions
-```
+```rust
 fn main() {
     let x = 5;
 
@@ -295,7 +295,7 @@ Anything that returns a value is without a `;`
 ## Control Flow
 
 - The condition in an if statement must result into a bool. This gives an error
-  ```
+  ```rust
   fn main() {
       let number = 3;
 
@@ -305,7 +305,7 @@ Anything that returns a value is without a `;`
   }
   ```
 - Since `if`s are expressions they can be used on the RHS of `let`s
-  ```
+  ```rust
   let number = if condition {
         5
   } else {
@@ -314,7 +314,7 @@ Anything that returns a value is without a `;`
   ```
   This on the other hand won't work. The type of number needs to be know at
   compile time.
-  ```
+  ```rust
   let number = if condition {
         5
   } else {
@@ -323,7 +323,7 @@ Anything that returns a value is without a `;`
   ```
 - There are 3 kinds of loops: `loop`, `while`, `for`. A `for` (more safe and
   concise than `while`s) loop looks like:
-  ```
+  ```rust
   fn main() {
       let a = [10, 20, 30, 40, 50];
 
@@ -352,7 +352,7 @@ addresses are all stored on the stack but the actual data values are stored on
 the heap.
 
 
-```
+```rust
 let ims = "immutable string stored on the stack"
 
 let mut s = String::from("hello");
@@ -364,7 +364,7 @@ As soon as the variable (owner of a data value) goes out of scope the memory
 allocated for that data is returned to the OS. At the `}` Rust calls a special
 funcions `drop` to do this.
 
-```
+```rust
 let x = 5; // bind the value 5 to x
 let y = x; // make a copy of the value in x and bind it to y
 
@@ -391,10 +391,180 @@ This way Rust automatically prevents making deep copies of your data which might
 give us a performance gain.
 
 **Making deliberate Deep Copy:**
-```
+```rust
 let s1 = String::from("hello");
 let s2 = s1.clone(); // the heap data is copied and neither of the variable is
                      // invalidated
 
 println!("s1 = {}, s2 = {}", s1, s2);
+```
+
+#### Contradicting Example (Stack-only data copy)
+```rust
+let x = 5;
+let y = x;
+
+println!("x = {}, y = {}", x, y);
+```
+
+Without using `clone` `x` is still valid and hasn't moved to `y` because types
+like integers are stored on the stack so making their copies is much quicker
+as compared to making copies on the heap.
+
+Types like integers have a special trait called `Copy` that prevent them from
+getting moved but if the drop trait has been implemented for this type Rust won't
+be able to annotate this type with `Copy`
+
+```rust
+fn main() {
+    let s = String::from("hello");  // s comes into scope
+
+    takes_ownership(s);             // s's value moves into the function...
+                                    // ... and so is no longer valid here
+
+    let x = 5;                      // x comes into scope
+
+    makes_copy(x);                  // x would move into the function,
+                                    // but i32 is Copy, so it’s okay to still
+                                    // use x afterward
+
+} // Here, x goes out of scope, then s. But because s's value was moved, nothing
+  // special happens.
+
+fn takes_ownership(some_string: String) { // some_string comes into scope
+    println!("{}", some_string);
+} // Here, some_string goes out of scope and `drop` is called. The backing
+  // memory is freed.
+
+fn makes_copy(some_integer: i32) { // some_integer comes into scope
+    println!("{}", some_integer);
+} // Here, some_integer goes out of scope. Nothing special happens.
+
+```
+
+Transferring Ownerships
+
+```rust
+fn main() {
+    let s1 = gives_ownership();         // gives_ownership moves its return
+                                        // value into s1
+
+    let s2 = String::from("hello");     // s2 comes into scope
+
+    let s3 = takes_and_gives_back(s2);  // s2 is moved into
+                                        // takes_and_gives_back, which also
+                                        // moves its return value into s3
+} // Here, s3 goes out of scope and is dropped. s2 goes out of scope but was
+  // moved, so nothing happens. s1 goes out of scope and is dropped.
+
+fn gives_ownership() -> String {             // gives_ownership will move its
+                                             // return value into the function
+                                             // that calls it
+
+    let some_string = String::from("hello"); // some_string comes into scope
+
+    some_string                              // some_string is returned and
+                                             // moves out to the calling
+                                             // function.
+}
+
+// takes_and_gives_back will take a String and return one.
+fn takes_and_gives_back(a_string: String) -> String { // a_string comes into
+                                                      // scope
+
+    a_string  // a_string is returned and moves out to the calling function
+}
+```
+
+The above approach is a bit tedious because we have to transfer ownership and
+then return it to the same function.
+
+*To just pass the value without the ownership we can use references*
+
+### References and Borrowing
+
+```rust
+fn main() {
+    let s1 = String::from("hello");
+
+    let len = calculate_length(&s1); // refers to the string but does not own it
+
+    println!("The length of '{}' is {}.", s1, len);
+}
+
+fn calculate_length(s: &String) -> usize { // Borrowing
+    s.len()
+} // s goes out of scope but since it does not own s1 nothing happens
+```
+
+If references are used as function parameters it is called as *Borrowing*
+**References are also immutable by default** This can be changed by doing
+something like
+
+```rust
+fn main() {
+    let mut s = String::from("hello");
+
+    change(&mut s);
+}
+
+fn change(some_string: &mut String) {
+    some_string.push_str(", world");
+}
+```
+
+**Restriction:** Only one mutable reference can exist in a particular scope.
+
+Not valid
+
+```rust
+
+let r1 = &mut s;
+let r2 = &mut s;
+
+```
+
+This prevents data races which occur in one of the following situations:
+- Two or more pointers access the same data at the same time.
+- At least one of the pointers is being used to write to the data.
+- There’s no mechanism being used to synchronize access to the data.
+
+A workaround for this could be creating new scopes using `{}` to allow
+multiple mutatable references.
+
+```rust
+// mutable and immutable references cannot be combined
+
+let mut s = String::from("hello");
+
+let r1 = &s; // no problem
+let r2 = &s; // no problem
+let r3 = &mut s; // BIG PROBLEM
+```
+
+It gives the following error.
+
+`error[E0502]: cannot borrow `s` as mutable because it is also borrowed as
+immutable`
+
+### Dangling References
+
+```rust
+fn main() {
+    let reference_to_nothing = dangle();
+}
+
+fn dangle() -> &String { // dangle returns a reference to a String
+
+    let s = String::from("hello"); // s is a new String
+
+    &s // we return a reference to the String, s
+} // Here, s goes out of scope, and is dropped. Its memory goes away. Danger!
+
+
+fn no_dangle() -> String {
+    let s = String::from("hello");
+
+    s
+}
 ```
