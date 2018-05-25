@@ -80,3 +80,108 @@ This has the following demerits:
   is shardable.
 - Limited Data Access Patterns: Lets say that we include some metadata in our key-value
   store and makes it difficult to shard. For example if we add who are the most frequent customers and have a query to fetch the most active customers that is an analytic query. For this kind of query we can go to each read replica on the shard and scatter that query on all of those and gather the results back (scatter-gather). Scatter-Gather is possible but shouldn't be considered as an option if there are a lot of such queries that reqiure scatter-gather
+
+
+### CAP Theorem
+**C** *onsistency*: When we do a read from a DB we should get the most recent update written.
+
+**A** *vailability*: The DB should always be ready for read and write operation. If we try to do a read or write it shouldn't tell us that "you cannot read/write at this time".
+
+**P** *artition* Tolerance: When a part of the distributed system or DB is disconnected or
+out of sync from the rest of the system then that is called a partition.
+
+
+The CAP thereom states that we can never have all three of the properties together in a
+distributed system. For any given system **P** will always be there since each node in a
+distributed system fails independently. So the possible combinations one can have are **CP** and **AP**. A distributed systems engineer has to choose between either C or A.
+
+**CP**: Lets say there is a network partition and one of the components goes out of system
+with the rest of the system and we choose to have consistency. If we do a read operation at
+this time it wouldn't be possible since the consistent system will choose not to share any
+data that might have gone out of sync with the other component rather than being available.
+
+**AP**: In this case a read operation will get an answer from the DB which can be out of sync and wrong but since we prioritized availability we cannot get consistency.
+
+
+## Distributed Transaction
+**ACID** Transaction: Stands for Atomic Consistent Isolated Durable.
+
+- Atomic: The transaction (a bundle of DB statements) either runs completely
+  (all the statetments are executed) or not at all.
+
+- Consistent: After the transaction is complete the DB is left in a valid state
+  (meaning writing to the DB / when the transaction completes we don't break
+   anything in the DB)
+
+- Isolated: Different transactions when trying to access the same elements in
+  a DB can't see each other. For example there is a transaction running that is
+  updating a block in the DB and another transaction tries to read or write to
+  the same block then the second transaction wouldn't be able to see the changes
+  made by the first one until after it completes.
+  Complete isolation is hard to achieve in a distributed system.
+
+- Durable: The DB remembers everything after a transaction commits.
+
+**ACID with an example:** Lets take the example of a coffeshop and various steps
+involved in getting a customer their coffee
+
+*Steps*
+- Receive order   -------------\     
+- Process Payment ------------- >========> carried out by a separate actor (waiter)   
+- Enqueue order   -------------/
+- Make coffee     ---------------->  Carried out by another actor
+- Deliver it      ---------------->  or two individual actors (barista(s))
+
+This work is split up to achieve *parallelization*.
+This kind of system can contain *uneven workloads* too (making the coffee takes longer than the payment or deliver).
+
+**Note:** Enqueuing is an example of distributed messaging.
+
+*Possible failures*
+- Payment failure
+- Insufficient resources
+- Equipment failure
+- Worker failure
+- Consumer failure
+
+In case of an acid (*emphasis on the atomic part of the acronym*) transaction all the steps described in a previous section are wrapped together as one operation and if any one of the steps fail then the whole operation fails and has to roll back
+
+*Possible Response to Failure*
+- Write-off: In case of consumer failure we throw out the drink (discard the work without advancing to the next step)
+- Retry: If there is an equipment or payment failure then we can always retry
+- Compensating action: Customer has paid and you cannot produce the coffee then you try to compensate it by executing a different transaction (pay them back)
+
+**A coffee shop doesn't follow dist transactional model since that would lead to a lower business or profit (lower throughput). This is why coffe shops don't follow atomic transaction to get a higher throughput and lower latency**
+
+## Distribution Computation
+
+Once a distributed storage has been deployed there needs to be some analysis done on the stored date. It follows the scatter gatther paradigm.
+
+So our date is distributed amongst a network of computers (dist storage) to do some
+analysis different programs are sent to these distributed storage units to do some computation on the data contained in those locally (scatter) and then the analysis is returned back (gather). [The programs are moved close to the data and ran on it]
+
+### Map Reduce
+
+This mathematical model consists of two functions `Map` and `Reduce`. This model
+as stated earlier works on the `Scatter-Gather` principle. Process consists of
+3 steps:
+1. `Mapper` function: This function accepts a bunch of key-value pairs as inputs
+and produces a list of key-value pairs as the output of the function. Ex- The
+inputa is a file path (key) and the text content (value) contained inside the
+file. When it goes through the mapper function, it tokenizes the content into
+words (keys) and maps them to their number of occurences in the text (values).
+This task can be distributed over a network of servers **(Scatter)**
+
+2. `Shuffler` function: The output obtained from the `mapper` is sent as an input
+to the `Shuffler` which is internal to the framework being used and the developer
+has no control over it. The shuffler is responsible to move the data around. Ex-
+The key-value pairs obtained from the `mapper` the ones with the common keys are
+gathered from the network the values of all the common keys is collected as a list
+of values at the same locality or node **(Gather)**
+
+3. `Reducer` function: This function is responsible for doing some kind of
+computation on the shuffled output. Ex- The list of values of the common keys
+are added together to produce the total number of occurences of the word in the
+text. This function often outputs either a scalar (or a record of scalars) or
+a list of values (but the list is smaller the any of the inputs in the previous
+steps)
