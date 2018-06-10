@@ -185,3 +185,80 @@ are added together to produce the total number of occurences of the word in the
 text. This function often outputs either a scalar (or a record of scalars) or
 a list of values (but the list is smaller the any of the inputs in the previous
 steps)
+
+### Hadoop
+
+Simply put it can be termed as a map reduce API that comes with map reduce job
+management and a file system (HDFS) to make it easier for developers to write map
+reduce jobs.
+
+**HDFS:** Hadoop Distributed File System.
+- It can store files and directories.
+- All the metadata management is done by a single replicated master (name node/server)
+  all of it being stored in memory (so fast but can take a lot of space since Hadoop
+  is written in Java).
+- Files are stored in large, immutable and replicated blocks. The smallest block
+(chunk) is a 128 MB. Files cannot be modified but only created and deleted
+  (immutable)
+
+#### Distributed storage in HDFS
+
+
+
+                                                     ____ CLIENT APP (There can be    
+                                     _______________|                 multiple apps)
+                             _______|_________
+                            |                 |
+          _________________ |    NAME NODE    |________________
+         |                  |_________________|                |
+         |                            |                        |      
+         |                            |                        |
+         |                            |                        |
+         |                            |                        |
+ ________|________           _________|_______             ____|____________
+|                 |         |                 |           |                 |
+|    DATA NODE 1  |         |   DATA NODE 2   |           |    DATA NODE 3  |
+|_________________|         |_________________|           |_________________|
+
+
+- The client apps query the name node to read/write data into the data nodes.
+- The name node tells the apps which data node they need to contact for the
+  read/write operation requested by the app`
+- Since its a DistributedSystem designed to handle multiple requests from multiple
+  apps each client app will have its own connections to the data nodes.
+- The app will then query the data node and request it to perform the operation.
+> Let's say a new file has to be created and the app is redirected to the node3
+  for this change
+
+- The data node 3 creates the new file and writes the data sent to it.
+- Once the data is written in a block inside a node it is replicated in the others,
+  this is managed by the name node.
+- HDFS is built for storing large chunks of data in it. That means it is not
+  built for handling high velocity of queries from the apps.
+- If one data node goes down then it always calls up the name node to query which
+  activaties it missed while offline and replicates them.
+- For replication the data nodes talk to each other and make a copy of the blocks
+  from the other nodes.
+
+#### Distributed Computation in Hadoop
+
+                                                     ____ CLIENT APP (There can be    
+                                     _______________|                 multiple apps)
+                             _______|_________
+                            |                 |
+          _________________ |    JobTracker   |________________
+         |                  |_________________|                |
+         |                            |                        |      
+         |                            |                        |
+         |                            |                        |
+         |                            |                        |
+ ________|________           _________|_______             ____|____________
+|                 |         |                 |           |                 |
+|    DATA NODE 1  |         |   DATA NODE 2   |           |    DATA NODE 3  |
+|_________________|         |_________________|           |_________________|
+
+
+- In large clusters the Job Tracker and the Name Node are isolated entities (
+reside on different servers)
+- The client app submits a job (a map and a reduce function) to the tracker
+  in the form of a jar file.
