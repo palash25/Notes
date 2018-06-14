@@ -126,12 +126,14 @@ data that might have gone out of sync with the other component rather than being
 involved in getting a customer their coffee
 
 *Steps*
+```
 - Receive order   -------------\     
 - Process Payment ------------- >========> carried out by a separate actor (waiter)   
 - Enqueue order   -------------/
+
 - Make coffee     ---------------->  Carried out by another actor
 - Deliver it      ---------------->  or two individual actors (barista(s))
-
+```
 This work is split up to achieve *parallelization*.
 This kind of system can contain *uneven workloads* too (making the coffee takes longer than the payment or deliver).
 
@@ -167,7 +169,7 @@ as stated earlier works on the `Scatter-Gather` principle. Process consists of
 3 steps:
 1. `Mapper` function: This function accepts a bunch of key-value pairs as inputs
 and produces a list of key-value pairs as the output of the function. Ex- The
-inputa is a file path (key) and the text content (value) contained inside the
+input is a file path (key) and the text content (value) contained inside the
 file. When it goes through the mapper function, it tokenizes the content into
 words (keys) and maps them to their number of occurences in the text (values).
 This task can be distributed over a network of servers **(Scatter)**
@@ -202,7 +204,7 @@ reduce jobs.
   (immutable)
 
 #### Distributed storage in HDFS
-
+```
 
 
                                                      ____ CLIENT APP (There can be    
@@ -220,7 +222,7 @@ reduce jobs.
 |    DATA NODE 1  |         |   DATA NODE 2   |           |    DATA NODE 3  |
 |_________________|         |_________________|           |_________________|
 
-
+```
 - The client apps query the name node to read/write data into the data nodes.
 - The name node tells the apps which data node they need to contact for the
   read/write operation requested by the app`
@@ -241,6 +243,7 @@ reduce jobs.
   from the other nodes.
 
 #### Distributed Computation in Hadoop
+```
 
                                                      ____ CLIENT APP (There can be    
                                      _______________|                 multiple apps)
@@ -256,9 +259,21 @@ reduce jobs.
 |                 |         |                 |           |                 |
 |    DATA NODE 1  |         |   DATA NODE 2   |           |    DATA NODE 3  |
 |_________________|         |_________________|           |_________________|
+|_____REDUCER_____|         |_____REDUCER_____|           |_____REDUCER_____|
+|=================|         |=================|           |=================|
+|___TASK TRACKER__|         |___TASK TRACKER__|           |___TASK TRACKER__|
 
 
+```
 - In large clusters the Job Tracker and the Name Node are isolated entities (
 reside on different servers)
 - The client app submits a job (a map and a reduce function) to the tracker
   in the form of a jar file.
+- The jar file is serialize and dumped onto the tracker
+- The job tracker splits up the job into mappers and send them to the data nodes.
+- The map functions are seriaziled and sent to the `TaskTracker` (resides on the
+  data node) and that mapper is executed on the data in the node.
+- The mapper outputs new KV pairs which are written to the FileSystem
+- Then the shuffler is run which might move around data to various nodes.
+- The JobTracker then sends the reducer to the data nodes which works on the
+  shuffled KV pairs and generates new pairs to be written to the FileSystem.  
