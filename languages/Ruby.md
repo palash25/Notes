@@ -29,3 +29,37 @@ puts 'This appears to be true.' if x == 4
 
 > The labels with colon are called symbols and are unique objects so the symbols with the same name are the same physical object
 
+- There are no named parameters in Ruby but this concept can be emulated using a hash
+
+```ruby
+def truth(option={})
+	if option[:profession] == :lawyer
+		puts 'could be false'
+	else
+		puts 'true'
+	end
+end
+
+truth
+
+truth :profession => :lawyer
+```
+
+- A code block is a function without a name `3.times {puts 'hiya there, kiddo'}` will execute the block/function 3 times.
+
+- For 1 line blocks braces are used and for code blocks exceeding that limit we use `do/end`
+
+- Passing executable code around in Ruby
+```ruby
+>> def call_block(&block)
+>> block.call
+>> end
+=> nil
+>> def pass_block(&block)
+>> call_block(&block)
+>> end
+=> nil
+>> pass_block {puts 'Hello, block'}
+Hello, block
+```
+
