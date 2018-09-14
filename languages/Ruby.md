@@ -63,3 +63,29 @@ truth :profession => :lawyer
 Hello, block
 ```
 
+- Ruby equivalent for pythons *args and *kwargs are called splat(*) and double splat operator(**). Example:
+```ruby
+def test_method
+  yield({hash_one: "argument one", hash_two: "argument two", hash_three: "argument three"})
+end 
+
+test_method do |**double_splat_parameter| 
+  puts double_splat_parameter
+end
+
+```
+**Classes**
+- In ruby classes can only inherit from one parent known as a "superclass". Example
+```
+>> 4.class
+=> Fixnum
+>> 4.class.superclass
+=> Integer
+>> 4.class.superclass.superclass
+=> Numeric
+>> 4.class.superclass.superclass.superclass
+=> Object
+>> 4.class.superclass.superclass.superclass.superclass
+=> nil
+```
+
