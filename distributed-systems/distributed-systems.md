@@ -277,3 +277,13 @@ reside on different servers)
 - Then the shuffler is run which might move around data to various nodes.
 - The JobTracker then sends the reducer to the data nodes which works on the
   shuffled KV pairs and generates new pairs to be written to the FileSystem.  
+
+
+### Spark
+- Uses scatter/gather
+- Different Data Models: Resilient Distributed Datasets (RDDs)
+- A set of transform/action functions providing a more general programming model
+  (map is one of the transform and reduce one of the action functions)
+- Storage agnostic (Spark+HDFS or Spark+Cassandra) unlike Hadoop where using HDFS is mandatory
+
+#### Architecture

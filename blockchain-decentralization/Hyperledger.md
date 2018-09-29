@@ -101,7 +101,7 @@ a transaction can view the the transaction rather than the whole network.
 
 
 ## Other blockchains
-- **ChainCore:**
-- **Corda:**
-- **Quorum:**
-- **IOTA:**
+- **ChainCore:** Permissioned blockchain system that is focused on financial services, like currencies, securities, etc. It also features a testnet which allows for DApp development possible.
+- **Corda:** distributed ledger technologies to record, manage, and automate legal agreements between businesses; however, it is not a blockchain platform, Corda only allows information access and validation functions to parties actually involved in the transaction
+- **Quorum:** Fork of Ethereum which uses a voting based algorithm. Transperancy by allowing data visibility on a need-to-know basis. The network validates all smart contracts and overall system state through the involvement of all running nodes.
+- **IOTA:** Uses a generalized blockchain technology called tangle. Uses peer based reviews, This allows the platform to be completely free of cost, without facing the scaling challenges. Focus on IoT.
