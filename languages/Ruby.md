@@ -23,11 +23,14 @@ puts 'This appears to be true.' if x == 4
 
 ```ruby
  numbers = {1 => 'one', 2 => 'two'}
- 
+
  stuff = {:array => [1, 2, 3], :string => 'Hi, mom!'}
 ```
 
 > The labels with colon are called symbols and are unique objects so the symbols with the same name are the same physical object
+Symbols are lightweight strings used when we don't want the strings to be printed to the screen
+
+- Capitalized variables in Ruby are constants e.g `EmpireStateBuilding = "350 5th Avenue, NYC, NY"`
 
 - There are no named parameters in Ruby but this concept can be emulated using a hash
 
@@ -67,9 +70,9 @@ Hello, block
 ```ruby
 def test_method
   yield({hash_one: "argument one", hash_two: "argument two", hash_three: "argument three"})
-end 
+end
 
-test_method do |**double_splat_parameter| 
+test_method do |**double_splat_parameter|
   puts double_splat_parameter
 end
 
@@ -89,3 +92,10 @@ end
 => nil
 ```
 
+- Anything used after a dot is a method. Methods can be chanined together. For e.g. `"  some String   ".trim.capitalize`
+
+- *Class Methods:* Unlike usual methods class methods in Ruby are attached to variables/constants using (`::`). E.g. `Network::Connect`
+
+- *Global variables:* Represented using `$variable_name`
+- *Instance variables:* Using @ stmbol `@var`. Used to define attributes of an object
+- *Class Variables*: Represented by double ats. E.g. `@@class_var`
