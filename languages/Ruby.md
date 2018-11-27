@@ -97,5 +97,8 @@ end
 - *Class Methods:* Unlike usual methods class methods in Ruby are attached to variables/constants using (`::`). E.g. `Network::Connect`
 
 - *Global variables:* Represented using `$variable_name`
-- *Instance variables:* Using @ stmbol `@var`. Used to define attributes of an object
+- *Instance variables:* Using @ symbol `@var`. Used to define attributes of an object
 - *Class Variables*: Represented by double ats. E.g. `@@class_var`
+
+
+- *Concatanation:* The `<<` method is used for this. 
