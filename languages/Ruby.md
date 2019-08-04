@@ -102,3 +102,47 @@ end
 
 
 - *Concatanation:* The `<<` method is used for this. 
+
+
+ Classes start
+with capital letters and typically use CamelCase to denote capitalization. You must prepend instance variables (one value per object) with
+@ and class variables (one value per class) with @@. Instance variables
+and method names begin with lowercase letters in the underscore_style.
+Constants are in ALL_CAPS. Functions and
+methods that test typically use a question mark (if test?).
+
+The attr keyword defines an instance variable and a method of the same name to access it
+
+Modules are ruby's equivalent to Java's interfaces and provide a way to replace multiple inheritance.
+
+Module: a bunch of functions and constants that when included into classes becomes a part of it.
+
+> This is called implementing a Mixin
+
+Ex:
+
+```ruby
+
+module TestModule
+	def func_1
+		...
+	end
+
+	def func_2
+		...
+	end
+end
+
+class Something
+include TestModule
+	def initialize()
+		...
+	end
+end
+
+Something.new(...).func_1
+```
+
+Functions implemented in the class can also be used in a module.
+
+
