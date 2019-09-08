@@ -339,7 +339,9 @@ Instead of an automatic garbage collector or manually allocating and
 de-allocating memory Rust uses a system of Ownership to assign memory to various
 
 **Stack and Heap**: Data with unknown size that might change later is stored
-on the heap and the rest on the stack.
+on the heap and the rest (fixed size) on the stack.
+
+**Note:** When your code calls a function, the values passed into the function (including, potentially, pointers to data on the heap) and the function’s local variables get pushed onto the stack. When the function is over, those values get popped off the stack.
 
 **Rules:**
 -Each value in Rust has a variable that’s called its owner.
