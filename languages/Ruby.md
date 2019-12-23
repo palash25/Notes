@@ -100,8 +100,7 @@ end
 - *Instance variables:* Using @ symbol `@var`. Used to define attributes of an object
 - *Class Variables*: Represented by double ats. E.g. `@@class_var`
 
-
-- *Concatanation:* The `<<` method is used for this. 
+- *Concatanation:* The `<<` method is used for this.
 
 
  Classes start
@@ -145,4 +144,19 @@ Something.new(...).func_1
 
 Functions implemented in the class can also be used in a module.
 
+**Note:** When you're creating libraries with Ruby, it is a good practice to namespace your code under the name of your library or project.
 
+
+### Self
+
+- Can be used to define class methods
+
+```ruby
+class Post
+  def self.print_author
+    puts "The author of all posts is Jimmy"
+  end
+end
+
+Post.print_author
+```
