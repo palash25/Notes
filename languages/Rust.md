@@ -570,3 +570,68 @@ fn no_dangle() -> String {
     s
 }
 ```
+
+**Update:** I abandoned Rust after a while due to lack of time. These are the notes from my second attempt at learning Rust.
+
+- Rust has auto referencing/de-referencing
+
+LIFETIMES
+
+```rust
+fn longest<'a>(x: &'a str, y: &'a str) -> &'a str {
+    if x.len() > y.len() {
+        x
+    } else {
+        y
+    }
+}
+
+```
+
+When we pass concrete references to longest, the concrete lifetime that is substituted for 'a is the part of the scope of x that overlaps with the scope of y. In other words, the generic lifetime 'a will get the concrete lifetime that is equal to the smaller of the lifetimes of x and y. Because we’ve annotated the returned reference with the same lifetime parameter 'a, the returned reference will also be valid for the length of the smaller of the lifetimes of x and y.
+
+elision rules
+
+
+The first rule is that each parameter that is a reference gets its own lifetime parameter. In other words, a function with one parameter gets one lifetime parameter: fn foo<'a>(x: &'a i32); a function with two parameters gets two separate lifetime parameters: fn foo<'a, 'b>(x: &'a i32, y: &'b i32); and so on.
+
+The second rule is if there is exactly one input lifetime parameter, that lifetime is assigned to all output lifetime parameters: fn foo<'a>(x: &'a i32) -> &'a i32.
+
+The third rule is if there are multiple input lifetime parameters, but one of them is &self or &mut self because this is a method, the lifetime of self is assigned to all output lifetime parameters. This third rule makes methods much nicer to read and write because fewer symbols are necessary.
+
+
+- When invoking trait methods, the receiver is borrowed implicitly:
+
+```rust
+fn main() {
+    let n = Number { odd: true, value: 51 };
+    let mut m = n.clone();
+    m.value += 100;
+    
+    print_number(&n);
+    print_number(&m);
+}
+```
+To highlight this: these are equivalent:
+
+```rust
+let m = n.clone();
+
+let m = std::clone::Clone::clone(&n);
+````
+
+- Marker traits like Copy have no methods `impl std::marker::Copy for Number {}`
+
+Some traits are so common, they can be implemented automatically by using the derive attribute:
+
+```rust
+#[derive(Clone, Copy)]
+struct Number {
+    odd: bool,
+    value: i32,
+}
+
+// this expands to `impl Clone for Number` and `impl Copy for Number` blocks.
+```
+
+-  `Box<dyn Error>` means the function will return a type that implements the Error trait, but we don’t have to specify what particular type the return value will be. This gives us flexibility to return error values that may be of different types in different error cases. The dyn keyword is short for “dynamic.”
