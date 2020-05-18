@@ -144,9 +144,60 @@ end
 
 `GenServer.start_link`: the first argument is the module name that contains the `init` function and invokes it. Our client `start_link` is just a wrapper around the function provided by the GenServer to provide a way for clients to invoke GenServer functions instead of manually calling Genserver functions and pass the API module to it.
 
+`handle_call`: The first argument declares the expected request to be handled. The second argument returns a tuple in the form of {pid, tag}, where the pid is the pid of the client
+and tag is a unique reference to the message. 
 
+`handle_call`(s) & `handle_cast`(s) should be grouped together.
+
+good use case for GenServer.cast/2? A
+fine example is a command that’s issued to a server and that causes a side effect in the
+server’s state. In that case, the client issuing the command shouldn’t care about a
+reply.
+
+Messages may arrive from processes that aren’t defined in handle_call/3/handle
+_cast/2. That’s where handle_info/2 comes in. It’s invoked to handle any other
+messages that are received by the process, sometimes referred to as out-of-band messages. You don’t need to supply a client API counterpart for handle_info/2.
+
+
+In case of distributed nodes you can use a name attribute for your GenServers
+```elixir
+defmodule Metex.Worker do
+  use GenServer
+  @name MW
+  ## Client API
+  def start_link(opts \\ []) do
+    GenServer.start_link(__MODULE__, :ok, opts ++ [name: MW])
+  end
+
+  def get_temperature(location) do
+    GenServer.call(@name, {:location, location})
+  end
+end
+```
+
+Things to keep in mind while writing GenServers
+ The state with which you want to initialize the server
+ The kinds of messages the server handles
+ When to reply to the client
+ What message to use to reply to the client
+ What resources to clean up after termination
+
+### Processes
+- There’s no shared memory. The only way a change
+of state can occur within a process is when a message is sent to it. This is different from
+threads, because threads share memory. 
+- messages can come in the form of any valid Elixir
+term. This means tuples, lists, and atoms are all fair game.
+
+#### Links and Monitors
 
 ### Agents
 
 Agents are simple wrappers around state. If all you want from a process is to keep state, agents are a great fit.
 
+### Different OTP behaviours and their uses
+
+GenServer => Implementing the server of a client-server relationship
+GenEvent => Implementing event-handling functionality
+Supervisor => Implementing supervision functionality
+Application => Working with applications and defining application callbacks
