@@ -635,3 +635,177 @@ struct Number {
 ```
 
 -  `Box<dyn Error>` means the function will return a type that implements the Error trait, but we don’t have to specify what particular type the return value will be. This gives us flexibility to return error values that may be of different types in different error cases. The dyn keyword is short for “dynamic.”
+
+- For many types in Rust, there are owned and non-owned variants:
+    - Strings: String is owned, &str is a reference
+    - Paths: PathBuf is owned, &Path is a reference
+    - Collections: Vec<T> is owned, &[T] is a reference
+> Rust has slices - they're a reference to multiple contiguous elements.
+
+- To make the rightmost bound of a range inclusive use `=` like this `println!("{:?}", (..=20).contains(&20))`
+
+- We need to use trait bounds when using closures (which implement at least one of the following `Fn`, `FnMut`, `FnOnce` trait) with structs
+```Rust
+// a simple example of memoization
+
+struct Cacher<T>
+where
+    T: Fn(u32) -> u32,
+{
+    calculation: T,
+    value: Option<u32>,
+}
+
+impl<T> Cacher<T>
+where
+    T: Fn(u32) -> u32,
+{
+    fn new(calculation: T) -> Cacher<T> {
+        Cacher {
+            calculation,
+            value: None,
+        }
+    }
+
+    fn value(&mut self, arg: u32) -> u32 {
+        match self.value {
+            Some(v) => v,
+            None => {
+                let v = (self.calculation)(arg);
+                self.value = Some(v);
+                v
+            }
+        }
+    }
+}
+```
+
+- Unlike functions, closures can capture their enviroment or use the variables defined in the parent scope (**Note** this has a memory overhead)
+```Rust
+fn main() {
+    let x = 4;
+    let equal_to_x = |z| z == x;
+    let y = 4;
+    assert!(equal_to_x(y));
+}
+```
+- Closures are able to capture the enviroment because of the following traits:
+  - `Fn` borrows values from its environment immutably
+  - `FnMut` borrows them mutably and hence we can change the values borrowed inside closures implementting this trait
+  - `FnOnce` the closure consumes the values by taking ownership of them only "once", hence the name.
+
+- Rust can infer closure traits. All closures implement FnOnce because they can all be called at least once. Closures that don’t move the captured variables also implement FnMut.
+- A closure can be forced to take ownership of a value using the `move` keyword, used when passing data between two threads to avoid race conditions `let equal_to_x = move |z| z == x;`
+- Any type in Rust that can be iterated implements the `Iterator` trait with the `next` method and returns an item wrapped in a `Some` and a `None` at the end. We can either get the items by calling `next` on an iterator (returned using the `iter` method) or simply using a for loop
+```Rust
+// The iterator trait
+
+
+pub trait Iterator {
+    type Item;
+
+    fn next(&mut self) -> Option<Self::Item>;
+
+    // methods with default implementations elided
+}
+
+// instantiating an iterator
+
+fn main() {
+   let v1 = vec![1, 2, 3];
+    // the iterator is lazy
+    let v1_iter = v1.iter();
+    for val in v1_iter {
+        println!("Got: {}", val);
+    }
+}
+
+```
+- The `iter` method returns an iterator over immutable references and the `next` method returns immutable references to the values, but we can also use `iter_mut` to return mutable references and `into_iter` to make a iterator that takes ownership of the values instead of `iter()`
+- *consumer adaptor* are methods that consume elements from an iterator, for example `sum` method takes the ownership of an iterator and returns the sum of elements.
+- *iterator adaptors* are methods defined over `Iterator` trait, they allow you to change the iterators into new iterators `v1.iter().map(|x| x + 1);` These are only executed when they are consumed, all adaptors are lazy for example adding a `collect` call to the above snippet `let v2: Vec<_> = v1.iter().map(|x| x + 1).collect();`. `filter` is another iterator adaptor and works the same way as Clojure's `filter`.
+- Implemet `Iterator` for custom types:
+```Rust
+  struct Counter {
+    count: u32,
+}
+
+impl Counter {
+    fn new() -> Counter {
+        Counter { count: 0 }
+    }
+}
+
+impl Iterator for Counter {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.count < 5 {
+            self.count += 1;
+            Some(self.count)
+        } else {
+            None
+        }
+    }
+}
+```
+- Once the trait is implemented for the custome type we can use all the other Iterator trait methods defined in standard library like `sum`, `filter`, `map`, etc, the only method that we need to define is next the rest are reusable.
+- We can use `///` for documentation comments and it supports markdown. Commonly used docs sections are Examples (which are also doc tests), Errors (if the function returns a `Result`), Panics, Safety (if the function is `unsafe to call`)
+- `cargo doc --open` can be used to build the docs and open them in your browser
+- `//!` are used for crate/module level docs
+- `pub use` statements can be used to re-expport crate modules to make it useful for library use to use different modules exposed by our crates. This is useful in case of nested modules and makes our crate user friendly
+```Rust
+// CRATE SOURCE
+
+pub use self::kinds::PrimaryColor;
+pub use self::kinds::SecondaryColor;
+pub use self::utils::mix;
+
+pub mod kinds {
+    // --snip--
+}
+
+pub mod utils {
+    // --snip--
+}
+
+// USAGE CODE
+
+use art::mix;
+use art::PrimaryColor;
+
+fn main() {
+    // --snip--
+}
+```
+- Smart Pointers are usually implemented using structs and store some metadata along with references/pointers to values. They implement the `Deref` and `Drop` traits
+- `Box` is a smart pointer and can be used in the following situations:  
+  -  When you have a type whose size can’t be known at compile time and you want to use a value of that type in a context that requires an exact size
+  -  When you have a large amount of data and you want to transfer ownership but ensure the data won’t be copied when you do so
+  -  When you want to own a value and you care only that it’s a type that implements a particular trait rather than being of a specific type
+- Box helps us in storing recursive types, by storing them on the heap and storing a pointer to that data on the stack (a kind of indirection). Example
+```Rust
+enum List {
+    Cons(i32, Box<List>),
+    Nil,
+}
+
+use crate::List::{Cons, Nil};
+
+fn main() {
+    let list = Cons(1, Box::new(Cons(2, Box::new(Cons(3, Box::new(Nil))))));
+}
+```
+- Rust treats `Box` like a normal reference because it implements the `Deref` trait essentially has a `deref` method that returns a "reference" to the value so that there is not transfer of ownership and still allow the dereference operator `*` to get the value of the `&` reference that was returned
+
+```Rust
+use std::ops::Deref;
+
+impl<T> Deref for MyBox<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        &self.0
+    }
+}
+```
